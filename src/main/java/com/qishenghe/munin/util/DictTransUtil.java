@@ -37,7 +37,7 @@ public class DictTransUtil {
     /**
      * 编码根据字典向原值转换
      *
-     * @param result 结果
+     * @param result    结果
      * @param dictPoint 字典指向（字典指向优先级大于属性注解）
      * @author qishenghe
      * @date 2021/6/8 10:44
@@ -85,6 +85,22 @@ public class DictTransUtil {
                     if (code != null) {
                         // 获取meaning
                         String meaning = getMeaningByCode(dictCode, code);
+                        String beforeTransSplitSymbol = field.getAnnotation(MuninPoint.class).beforeTransSplitSymbol();
+                        if (StringUtils.isNotEmpty(beforeTransSplitSymbol)) {
+                                //表明有字段值为1，2，3，4
+                                String symbol = field.getAnnotation(MuninPoint.class).beforeTransSplitSymbol();
+                                String[] split = code.split(symbol);
+                                List<String> meaningListTemp = new ArrayList<>();
+                                // 获取meaning
+                                if (split != null && split.length != 0) {
+                                    for (int i = 0; i < split.length; i++) {
+                                        String meaningByCode = getMeaningByCode(dictCode, split[i]);
+                                        meaningListTemp.add(meaningByCode);
+                                    }
+                                    String afterTransSplitSymbol = field.getAnnotation(MuninPoint.class).afterTransSplitSymbol();
+                                    meaning  = String.join(afterTransSplitSymbol, meaningListTemp);
+                                }
+                        }
                         // 执行转换
                         if (field.isAnnotationPresent(MuninPoint.class)) {
                             // 存在指向注解，根据注解中的指示进行转换覆盖
@@ -129,15 +145,15 @@ public class DictTransUtil {
 
     /**
      * 编码根据字典向原值转换（递归处理用户自定义类型的属性）
-     * 
-     * @param result 结果
+     *
+     * @param result    结果
      * @param dictPoint 字典指向（字典指向优先级大于属性注解）
-     * @since 1.0.0
      * @author qishenghe
      * @date 12/31/21 10:12 AM
      * @change 12/31/21 10:12 AM by shenghe.qi@relxtech.com for init
+     * @since 1.0.0
      */
-    public <T> void transResultCodeToMeaning (T result, Map<String, String> dictPoint) {
+    public <T> void transResultCodeToMeaning(T result, Map<String, String> dictPoint) {
 
         // 递归扫描自定义类，HashSet用于存储已经转换的类对象，当出现重复时说明对象已进行过转换，自动跳过
         transResultCodeToMeaning(result, dictPoint, new HashSet<>());
@@ -147,16 +163,16 @@ public class DictTransUtil {
     /**
      * 递归处理对象下的所有自定义类
      * TODO 需要考虑当result对象使用了lombok的data注解时，hashCode方法和toString方法环图情况下调用导致的栈溢出问题
-     * 
-     * @param result 结果
-     * @param dictPoint 字典指向（字典指向优先级大于属性注解）
+     *
+     * @param result             结果
+     * @param dictPoint          字典指向（字典指向优先级大于属性注解）
      * @param overTransObjectSet 存储递归处理过程中已经转换过的对象
-     * @since 1.0.0
      * @author qishenghe
      * @date 12/31/21 6:27 PM
      * @change 12/31/21 6:27 PM by shenghe.qi@relxtech.com for init
+     * @since 1.0.0
      */
-    private <T> void transResultCodeToMeaning (T result, Map<String, String> dictPoint, Set<Object> overTransObjectSet) {
+    private <T> void transResultCodeToMeaning(T result, Map<String, String> dictPoint, Set<Object> overTransObjectSet) {
 
         transSingleResultCodeToMeaning(result, dictPoint);
         // 标记该对象已被处理
@@ -191,13 +207,13 @@ public class DictTransUtil {
 
     /**
      * 【封装】判断类型是否是自定义类
-     * 
+     *
      * @param clazz 类
      * @return 是否是自定义类（true：是，false：否）
-     * @since 1.0.0
      * @author qishenghe
      * @date 12/31/21 10:51 AM
      * @change 12/31/21 10:51 AM by shenghe.qi@relxtech.com for init
+     * @since 1.0.0
      */
     private static boolean judgmentCustomClass(Class<?> clazz) {
         return clazz != null && clazz.getClassLoader() != null;
@@ -220,7 +236,7 @@ public class DictTransUtil {
      * 编码根据字典向原值转换（List）
      *
      * @param resultList 结果
-     * @param dictPoint 字典指向（字典指向优先级大于属性注解）
+     * @param dictPoint  字典指向（字典指向优先级大于属性注解）
      * @author qishenghe
      * @date 2021/6/8 10:44
      * @change 2021/6/8 10:44 by qishenghe for init
@@ -249,19 +265,19 @@ public class DictTransUtil {
      * 编码根据字典向原值转换（List）（多线程处理）
      *
      * @param resultList 结果
-     * @param dictPoint 字典指向
-     * @param block 阻塞（true：阻塞，false：非阻塞）
+     * @param dictPoint  字典指向
+     * @param block      阻塞（true：阻塞，false：非阻塞）
      * @author qishenghe
      * @date 2021/6/8 10:44
      * @change 2021/6/8 10:44 by qishenghe for init
      * @since 1.0.0
      */
     public <T> List<Future> transResultCodeToMeaningMultiThread(List<T> resultList, Map<String, String> dictPoint,
-                    boolean block) {
+                                                                boolean block) {
         List<Future> futureList = new LinkedList<>();
         for (T single : resultList) {
             Future<Boolean> singleFuture =
-                            muninSession.getMuninThreadPool().getThreadPoolCpu().submit(() -> transResultCodeToMeaning(single, dictPoint), true);
+                    muninSession.getMuninThreadPool().getThreadPoolCpu().submit(() -> transResultCodeToMeaning(single, dictPoint), true);
             futureList.add(singleFuture);
         }
 
@@ -283,7 +299,7 @@ public class DictTransUtil {
      * 【重载】编码根据字典向原值转换（List）（多线程处理）
      *
      * @param resultList 结果
-     * @param block 阻塞（true：阻塞，false：非阻塞）
+     * @param block      阻塞（true：阻塞，false：非阻塞）
      * @author qishenghe
      * @date 2021/6/8 10:44
      * @change 2021/6/8 10:44 by qishenghe for init
@@ -297,7 +313,7 @@ public class DictTransUtil {
      * 【多线程阻塞处理】编码根据字典向原值转换（List）（多线程处理）
      *
      * @param resultList 结果
-     * @param dictPoint 字典指向
+     * @param dictPoint  字典指向
      * @author qishenghe
      * @date 2021/6/8 10:44
      * @change 2021/6/8 10:44 by qishenghe for init
@@ -324,7 +340,7 @@ public class DictTransUtil {
      * 【封装】根据字典编码和编码（键）获取含义（值）
      *
      * @param dictCode 字典编码
-     * @param code 编码（键）
+     * @param code     编码（键）
      * @return 含义（值）
      * @author qishenghe
      * @date 2021/6/8 10:40
@@ -354,16 +370,16 @@ public class DictTransUtil {
 
     /**
      * 【封装】获取类属性
-     * 
-     * @param clazz clazz
+     *
+     * @param clazz    clazz
      * @param levelNum 向上（父类）搜索层数（注：-1表示无上限搜索模式）
      * @return 类属性集合（List）
-     * @since 1.0.0
      * @author qishenghe
      * @date 3/2/22 4:10 PM
      * @change 3/2/22 4:10 PM by shenghe.qi@relxtech.com for init
+     * @since 1.0.0
      */
-    private static List<Field> getAllFieldList (Class clazz, int levelNum) {
+    private static List<Field> getAllFieldList(Class clazz, int levelNum) {
 
         Field[] declaredFields = clazz.getDeclaredFields();
 
@@ -383,16 +399,16 @@ public class DictTransUtil {
 
     /**
      * 【封装】获取类属性
-     * 
-     * @param clazz clazz
+     *
+     * @param clazz    clazz
      * @param levelNum 向上（父类）搜索层数（注：-1表示无上限搜索模式）
      * @return 类属性集合（Map：key：类路径|属性名）
-     * @since 1.0.0
      * @author qishenghe
      * @date 3/2/22 4:14 PM
      * @change 3/2/22 4:14 PM by shenghe.qi@relxtech.com for init
+     * @since 1.0.0
      */
-    private static Map<String, Field> getAllFieldMap (Class clazz, int levelNum) {
+    private static Map<String, Field> getAllFieldMap(Class clazz, int levelNum) {
 
         List<Field> allFieldList = getAllFieldList(clazz, levelNum);
 

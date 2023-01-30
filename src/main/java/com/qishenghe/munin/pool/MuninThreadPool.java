@@ -10,6 +10,9 @@ import java.util.concurrent.ExecutorService;
  * @change 12/29/21 9:35 AM by shenghe.qi@relxtech.com for init
  */
 public abstract class MuninThreadPool {
+    /**
+     * q1:为什么不用接口
+     */
 
     /**
      * 获取cpu密集型线程池

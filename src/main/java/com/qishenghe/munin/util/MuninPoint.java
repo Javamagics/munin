@@ -63,4 +63,16 @@ public @interface MuninPoint {
      */
     int ableTransTimes() default 1;
 
+    /**
+     * 转义前 分隔符
+     * @return
+     */
+    String beforeTransSplitSymbol() default "";
+
+    /**
+     * 转义后 分隔符
+     * @return
+     */
+    String afterTransSplitSymbol() default ",";
+
 }

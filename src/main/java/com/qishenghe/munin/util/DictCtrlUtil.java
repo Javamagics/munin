@@ -42,6 +42,7 @@ public class DictCtrlUtil {
 
     /**
      * 只读 true：返回示例对象，修改会同步修改缓存内容 false：返回拷贝，随意修改，但性能较差
+     * q1:这个只读在哪设置的
      */
     private boolean readOnly;
 
